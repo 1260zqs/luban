@@ -1,31 +1,69 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
+//namespace Game.Config
 {{namespace_with_grace_begin __namespace}}
+
+public interface ITable
+{
+    public void Deserialize(JArray _buf);
+    public void ResolveRef(Tables tables);
+}
+
+public interface ITable<T> : ITable
+{
+    public System.Collections.Generic.Dictionary<int, T> DataMap { get; }
+    public System.Collections.Generic.List<T> DataList { get; }
+
+    public T GetOrDefault(int key);
+    public T Get(int key);
+    public T this[int key] { get; }
+}
+
 public partial class {{__name}}
 {
-    {{~for table in __tables ~}}
-{{~if table.comment != '' ~}}
-    /// <summary>
-    /// {{escape_comment table.comment}}
-    /// </summary>
-{{~end~}}
-    public {{table.full_name}} {{format_property_name __code_style table.name}} {get; }
-    {{~end~}}
+    private Dictionary<Type, ITable> m_tables = new Dictionary<Type, ITable>();
 
+    public delegate void TableAssetLoader(string name, TaskCompletionSource<string> taskContinue);
 
-      public {{__name}}(System.Func<string, JArray> loader)
+    public {{__name}}(TableAssetLoader loader, Action<Task> onAllDone)
     {
+        var tasks = new List<Task>();
+
         {{~for table in __tables ~}}
-        {{format_property_name __code_style table.name}} = new {{table.full_name}}(loader("{{table.output_data_file}}"));
+        {
+            // {{escape_comment table.comment}}
+            var sheet = new {{table.full_name}}();
+            m_tables.Add(typeof({{table.full_name}}), sheet);
+            tasks.Add(LoadTableAsync(loader, "{{table.output_data_file}}").ContinueWith(DeserializeTable, sheet));
+        }
         {{~end~}}
-        ResolveRef();
+
+        var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+        Task.WhenAll(tasks).ContinueWith(ResolveRef).ContinueWith(onAllDone, taskScheduler);
     }
-    
-     private void ResolveRef()
+
+    private static Task<string> LoadTableAsync(TableAssetLoader loader, string name)
     {
-        {{~for table in __tables ~}}
-        {{format_property_name __code_style table.name}}.ResolveRef(this);
-        {{~end~}}
+        var task = new TaskCompletionSource<string>();
+        loader(name, task);
+        return task.Task;
+    }
+
+    private static void DeserializeTable(Task<string> t, object o)
+    {
+        ((ITable)o).Deserialize(JArray.Parse(t.Result));
+    }
+
+    private void ResolveRef(Task task)
+    {
+        foreach (var table in m_tables.Values)
+        {
+            table.ResolveRef(this);
+        }
     }
 }
 
