@@ -72,6 +72,7 @@ public {{class_modifier __bean}} partial class {{__name}} : {{if parent_def_type
     public const int __ID__ = {{__bean.id}};
     public override int GetTypeId() => __ID__;
 {{~end~}}
+
 {{~ for field in export_fields ~}}
 {{~if field.comment != '' ~}}
     /// <summary>
