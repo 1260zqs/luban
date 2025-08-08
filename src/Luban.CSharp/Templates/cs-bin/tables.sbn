@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Luban;
 
 {{namespace_with_grace_begin __namespace}}
@@ -9,18 +12,36 @@ public partial class {{__name}}
     /// {{escape_comment table.comment}}
     /// </summary>
 {{~end~}}
-    public {{table.full_name}} {{format_property_name __code_style table.name}} {get; }
+    public {{table.full_name}} {{format_property_name __code_style table.name}} {get;}
     {{~end~}}
+	
+	public delegate void TableAssetLoader(string name, TaskCompletionSource<ByteBuf> taskContinue);
 
-    public {{__name}}(System.Func<string, ByteBuf> loader)
+    public {{__name}}(TableAssetLoader loader, Action<Task> onAllDone)
     {
+		var tasks = new List<Task>();
+		
         {{~for table in __tables ~}}
-        {{format_property_name __code_style table.name}} = new {{table.full_name}}(loader("{{table.output_data_file}}"));
+		tasks.Add(LoadTableAsync(loader, "{{table.output_data_file}}"), {{format_property_name __code_style table.name}} = new {{table.full_name}}());
         {{~end~}}
-        ResolveRef();
+
+		var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+		Task.WhenAll(tasks).ContinueWith(ResolveRef).ContinueWith(onAllDone, taskScheduler);
     }
     
-    private void ResolveRef()
+	private static Task LoadTableAsync(TableAssetLoader loader, string name, BaseConfigTable table)
+	{
+		var task = new TaskCompletionSource<ByteBuf>();
+		loader(name, task);
+		return task.Task.ContinueWith(DeserializeTable, table);
+	}
+	
+	private static void DeserializeTable(Task<ByteBuf> t, object o)
+	{
+		((ITable)o).Deserialize(t.Result);
+	}
+	
+    private void ResolveRef(Task task)
     {
         {{~for table in __tables ~}}
         {{format_property_name __code_style table.name}}.ResolveRef(this);
