@@ -12,7 +12,7 @@ public partial class {{__name}}
     /// {{escape_comment table.comment}}
     /// </summary>
 {{~end~}}
-    public {{table.full_name}} {{format_property_name __code_style table.name}} {get;}
+    public {{table.full_name}} {{format_property_name __code_style table.name}} { get; }
     {{~end~}}
 	
 	public delegate void TableAssetLoader(string name, TaskCompletionSource<ByteBuf> taskContinue);
@@ -22,7 +22,7 @@ public partial class {{__name}}
 		var tasks = new List<Task>();
 		
         {{~for table in __tables ~}}
-		tasks.Add(LoadTableAsync(loader, "{{table.output_data_file}}"), {{format_property_name __code_style table.name}} = new {{table.full_name}}());
+		tasks.Add(LoadTableAsync(loader, "{{table.output_data_file}}", {{format_property_name __code_style table.name}} = new {{table.full_name}}()));
         {{~end~}}
 
 		var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
@@ -38,7 +38,7 @@ public partial class {{__name}}
 	
 	private static void DeserializeTable(Task<ByteBuf> t, object o)
 	{
-		((ITable)o).Deserialize(t.Result);
+		((BaseConfigTable)o).Deserialize(t.Result);
 	}
 	
     private void ResolveRef(Task task)
