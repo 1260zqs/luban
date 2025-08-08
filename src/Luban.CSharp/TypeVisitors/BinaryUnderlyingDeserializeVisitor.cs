@@ -85,7 +85,8 @@ public class BinaryUnderlyingDeserializeVisitor : ITypeFuncVisitor<string, strin
         string e = $"__e{depth}";
         string index = $"__index{depth}";
         string typeStr = CreateNewArrayWithSize(type, n);
-        return $"{{int {n} = {bufName}.ReadSize(); {fieldName} = new {typeStr};for(var {index} = 0 ; {index} < {n} ; {index}++) {{ {type.ElementType.Apply(DeclaringTypeNameVisitor.Ins)} {e};{type.ElementType.Apply(this, bufName, $"{e}", depth + 1)} {fieldName}[{index}] = {e};}}}}";
+        string typeName = type.ElementType.Apply(DeclaringTypeNameVisitor.Ins);
+        return $"{{int {n} = {bufName}.ReadSize(); {fieldName} = {n} > 0 ? new {typeStr} : System.Array.Empty<{typeName}>();for(var {index} = 0 ; {index} < {n} ; {index}++) {{ {type.ElementType.Apply(DeclaringTypeNameVisitor.Ins)} {e};{type.ElementType.Apply(this, bufName, $"{e}", depth + 1)} {fieldName}[{index}] = {e};}}}}";
     }
 
     public string Accept(TList type, string bufName, string fieldName, int depth)
