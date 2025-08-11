@@ -62,4 +62,9 @@ public abstract class DefTypeBase
     public abstract void Compile();
 
     public virtual void PostCompile() { }
+
+    public override string ToString()
+    {
+        return $"{GetType().Name} {FullName}";
+    }
 }

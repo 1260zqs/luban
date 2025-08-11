@@ -60,8 +60,14 @@ public class BinaryUnderlyingDeserializeVisitor : ITypeFuncVisitor<string, strin
 
     public string Accept(TBean type, string bufName, string fieldName, int depth)
     {
-        string src = $"{CSharpUtil.GetFullNameWithGlobalQualifier(type.DefBean)}.Deserialize{type.DefBean.Name}({bufName})";
-        string constructor = type.DefBean.TypeConstructorWithTypeMapper();
+        var defBean = type.DefBean;
+        if (defBean.IsExternType)
+        {
+            string deserializer = defBean.TypeDeserializerWithTypeMapper();
+            return $"{fieldName} = {deserializer}({bufName});"; 
+        }
+        string src = $"{CSharpUtil.GetFullNameWithGlobalQualifier(defBean)}.Deserialize{defBean.Name}({bufName})";
+        string constructor = defBean.TypeConstructorWithTypeMapper();
         return $"{fieldName} = {(string.IsNullOrEmpty(constructor) ? src : $"{constructor}({src})")};";
     }
 

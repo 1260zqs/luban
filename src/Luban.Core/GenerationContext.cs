@@ -94,8 +94,9 @@ public class GenerationContext
         TimeZone = TimeZoneUtil.GetTimeZone(builder.TimeZone);
         _exportEmptyGroupsTypes = builder.Assembly.Target.Groups.Any(g => GlobalConf.Groups.First(gd => gd.Names.Contains(g))?.IsDefault == true);
 
-        TextProvider = EnvManager.Current.TryGetOption(BuiltinOptionNames.L10NFamily, BuiltinOptionNames.L10NProviderName, false, out string providerName) ?
-            L10NManager.Ins.CreateTextProvider(providerName) : null;
+        TextProvider = EnvManager.Current.TryGetOption(BuiltinOptionNames.L10NFamily, BuiltinOptionNames.L10NProviderName, false, out string providerName)
+            ? L10NManager.Ins.CreateTextProvider(providerName)
+            : null;
 
         ExportTables = Assembly.ExportTables;
         ExportTypes = CalculateExportTypes();
@@ -171,7 +172,17 @@ public class GenerationContext
             table.ValueTType.Apply(RefTypeVisitor.Ins, refTypes);
         }
 
-        return refTypes.OrderBy(p => p.Key).Select(p => p.Value).ToList();
+        return refTypes.OrderBy(p => p.Key)
+            .Select(p => p.Value)
+            .Where(x =>
+            {
+                if (x is DefBean defBean)
+                {
+                    return !defBean.IsExternType;
+                }
+                return true;
+            })
+            .ToList();
     }
 
     public static string GetInputDataPath()

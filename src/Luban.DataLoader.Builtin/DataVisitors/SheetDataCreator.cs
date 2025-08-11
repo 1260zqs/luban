@@ -339,7 +339,7 @@ class SheetDataCreator : ITypeFuncVisitor<RowColumnSheet, TitleRow, DType>
 
     public DType Accept(TBean type, RowColumnSheet sheet, TitleRow row)
     {
-        IDataParser dataParser = row.GetDataParser();
+        var dataParser = DataParserFactory.GetDataParser(type.DefBean.Format) ?? row.GetDataParser();
         string sep = row.SelfTitle.Sep;// type.GetBeanAs<DefBean>().Sep;
         if (row.Row != null)
         {

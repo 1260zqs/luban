@@ -71,14 +71,25 @@ public class GlobalConfigLoader : IConfigLoader
         var globalConf = JsonSerializer.Deserialize<LubanConf>(File.ReadAllText(fileName, Encoding.UTF8), options);
 
         var configFileName = Path.GetFileName(fileName);
-        var dataInputDir = Path.Combine(_curDir, globalConf.DataDir);
+        var dataInputDir = Path.GetFullPath(Path.Combine(_curDir, globalConf.DataDir));
         List<RawGroup> groups = globalConf.Groups.Select(g => new RawGroup() { Names = g.Names, IsDefault = g.Default }).ToList();
         List<RawTarget> targets = globalConf.Targets.Select(t => new RawTarget() { Name = t.Name, Manager = t.Manager, Groups = t.Groups, TopModule = t.TopModule }).ToList();
 
         List<SchemaFileInfo> importFiles = new();
         foreach (var schemaFile in globalConf.SchemaFiles)
         {
-            string fileOrDirectory = Path.Combine(_curDir, schemaFile.FileName);
+            const string kMagicPath = "dataDir:/";
+            string fileOrDirectory;
+            var schemaFileFileName = schemaFile.FileName;
+            if (schemaFileFileName.StartsWith(kMagicPath))
+            {
+                schemaFileFileName = schemaFileFileName.Substring(kMagicPath.Length);
+                fileOrDirectory = Path.Combine(dataInputDir, schemaFileFileName);
+            }
+            else
+            {
+                fileOrDirectory = Path.Combine(_curDir, schemaFileFileName);
+            }
             if (string.IsNullOrEmpty(schemaFile.Type))
             {
                 if (!Directory.Exists(fileOrDirectory) && !File.Exists(fileOrDirectory))

@@ -11,6 +11,7 @@ public class RawBean
     public string Parent { get; set; }
 
     public bool IsValueType { get; set; }
+    public bool IsExternType { get; set; }
 
     public string Comment { get; set; }
 
@@ -19,6 +20,7 @@ public class RawBean
     public string Alias { get; set; }
 
     public string Sep { get; set; }
+    public string Format { get; set; }
 
     public List<string> Groups { get; set; }
 

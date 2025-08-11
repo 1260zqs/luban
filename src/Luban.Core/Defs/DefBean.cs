@@ -49,7 +49,8 @@ public class DefBean : DefTypeBase
     public string Sep { get; }
 
     public bool IsValueType { get; }
-
+    public bool IsExternType { get; }
+    public string Format { get; }
 
     private List<DefField> _hierarchyExportFields;
 
@@ -94,6 +95,8 @@ public class DefBean : DefTypeBase
         IsValueType = b.IsValueType;
         Groups = b.Groups;
         TypeMappers = b.TypeMappers is { Count: > 0 } ? b.TypeMappers : null;
+        IsExternType = b.IsExternType;
+        Format = b.Format;
     }
 
     protected DefField CreateField(RawField f, int idOffset)

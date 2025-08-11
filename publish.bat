@@ -1,11 +1,11 @@
 @echo off
 
 set publish_dir=..\..\Excel\_make\luban
-if not exist %publish_dir% (
-  echo output path dose not exist %publish_dir%
-  pause
-  goto :EOF
-)
+REM if not exist %publish_dir% (
+  REM echo output path dose not exist %publish_dir%
+  REM pause
+  REM goto :EOF
+REM )
 
 pushd src
 dotnet publish Luban\Luban.csproj --configuration Release /p:DebugType=none -o %publish_dir%

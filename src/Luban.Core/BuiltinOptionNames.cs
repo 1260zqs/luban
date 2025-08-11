@@ -45,6 +45,7 @@ public static class BuiltinOptionNames
     public const string TypeMapperType = "type";
 
     public const string TypeMapperConstructor = "constructor";
+    public const string TypeMapperDeserializer = "deserializer";
 
     public const string PathValidatorFamily = "pathValidator";
 
