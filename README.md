@@ -2,6 +2,31 @@
 - [README 中文](./README.md)
 - [README English](./README_EN.md)
 
+# fork feat
+- we can add extern deserializer & support bean format="lite"
+```xml
+  <bean name="Vector2" valueType="1" extern="true" format="lite">
+        <var name="x" type="float"/>
+        <var name="y" type="float"/>
+        <mapper target="client" codeTarget="cs-bin">
+            <option name="type" value="UnityEngine.Vector2"/>
+            <option name="deserializer" value="ExternalTypeUtil.DeserializeVector2"/>
+        </mapper>
+  </bean>
+```
+- luban.conf schemaFiles can use dataDir: prefix to read schemaFile from dataDir
+```json
+{
+  "schemaFiles":
+  [
+    {"fileName":"define.xml", "type":""},
+    {"fileName":"__enums__.xlsx", "type":"enum"},
+
+    {"fileName":"dataDir:/__enums__@Items.xlsx", "type":"enum"}
+  ],
+  "dataDir": "../"
+}
+```
 # Luban
 
 ![icon](docs/images/logo.png)
