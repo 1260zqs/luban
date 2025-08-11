@@ -61,7 +61,12 @@ public partial class {{__name}} : TableBase
     public T GetOrDefaultAs<T>({{declaring_type_name key_type}} key) where T : {{declaring_type_name value_type}} => _dataMap.TryGetValue(key, out var v) ? (T)v : null;
     public T GetAs<T>({{declaring_type_name key_type}} key) where T : {{declaring_type_name value_type}} => (T)_dataMap[key];
 {{~end~}}
-	public {{declaring_type_name value_type}} TryGet(int key)
+	public bool TryGet({{declaring_type_name key_type}} key, out {{declaring_type_name value_type}} value)
+	{
+		return _dataMap.TryGetValue(key, out value);
+	}
+
+	public {{declaring_type_name value_type}} TryGet({{declaring_type_name key_type}} key)
 	{
 		if (_dataMap.TryGetValue(key, out var v))
 		{
@@ -143,11 +148,11 @@ public partial class {{__name}} : TableBase
     }
     {{~else~}}
 
-     private readonly {{declaring_type_name value_type}} _data;
+     private {{declaring_type_name value_type}} _data;
 
      public {{declaring_type_name value_type}} Data => _data;
 
-    public {{__name}}(ByteBuf _buf)
+    public override void Deserialize(ByteBuf _buf)
     {
         int n = _buf.ReadSize();
         if (n != 1) throw new SerializationException("table mode=one, but size != 1");

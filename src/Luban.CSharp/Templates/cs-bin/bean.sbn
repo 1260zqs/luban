@@ -22,29 +22,30 @@ end
 
 func generate_resolve_field_ref
     field = $0
+    manager_name = $1
     fieldName = format_property_name __code_style field.name
     refTable = get_ref_table field
     if can_generate_ref field
         tableName = format_property_name __code_style refTable.name
         if field.is_nullable
-            ret (get_ref_name field) + ' = ' + fieldName + '!= null ? tables.' + tableName + '.GetOrDefault(' + (get_value_of_nullable_type field.ctype fieldName) + ') : null;'
+            ret (get_ref_name field) + ' = ' + fieldName + '!= null ? tables.' + tableName + '.TryGet(' + (get_value_of_nullable_type field.ctype fieldName) + ') : null;'
         else
-            ret (get_ref_name field) + ' = tables.' + tableName + '.GetOrDefault(' + fieldName + ');'
+            ret (get_ref_name field) + ' = ' + manager_name + '.' + tableName + '.TryGet(' + fieldName + ');'
         end
     else if can_generate_collection_ref field
         collection_ref_table = get_collection_ref_table field
         tableName = format_property_name __code_style collection_ref_table.name
 		if field.ctype.type_name == 'list' || field.ctype.type_name == 'set'
             line1 = (get_ref_name field) + ' = new ' + (declaring_collection_ref_name field.ctype) + '();' + '\n'
-            line2 = 'foreach (var _v in ' + fieldName + ') { ' + (get_ref_name field) + '.Add(tables.' + tableName + '.GetOrDefault(_v)); }' + '\n'
+            line2 = 'foreach (var _v in ' + fieldName + ') { ' + (get_ref_name field) + '.Add(tables.' + tableName + '.TryGet(_v)); }' + '\n'
             ret line1 + line2
         else if field.ctype.type_name == 'array'
             line1 = (get_ref_name field) + ' = new ' + (declaring_type_name collection_ref_table.value_ttype) + '[' + fieldName + '.Length];' + '\n'
-            line2 = 'for (int _i = 0; _i < ' + fieldName + '.Length; _i++) { ' + (get_ref_name field) + '[_i] = tables.' + tableName + '.GetOrDefault(' + fieldName + '[_i]); }' + '\n'
+            line2 = 'for (int _i = 0; _i < ' + fieldName + '.Length; _i++) { ' + (get_ref_name field) + '[_i] = tables.' + tableName + '.TryGet(' + fieldName + '[_i]); }' + '\n'
             ret line1 + line2
 		else if field.ctype.type_name == 'map'
             line1 = (get_ref_name field) + ' = new ' + (declaring_collection_ref_name field.ctype) + '();' + '\n'
-			line2 = 'foreach (var kvp in ' + fieldName + ') { ' + (get_ref_name field) + '.Add(kvp.Key, tables.' + tableName + '.GetOrDefault(kvp.Value)); }' + '\n'
+			line2 = 'foreach (var kvp in ' + fieldName + ') { ' + (get_ref_name field) + '.Add(kvp.Key, tables.' + tableName + '.TryGet(kvp.Value)); }' + '\n'
 			ret line1 + line2
 		else
 			ret ''
@@ -131,7 +132,7 @@ public {{class_modifier __bean}} partial class {{__name}} : {{if parent_def_type
         base.ResolveRef(tables);
         {{~end~}}
         {{~for field in export_fields~}}
-            {{~ line = generate_resolve_field_ref field ~}}
+            {{~ line = generate_resolve_field_ref field __manager_name ~}}
                 {{~ if line != ''~}}
         {{line}}
                 {{~end~}}
